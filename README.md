@@ -75,6 +75,8 @@ disable-model-invocation: true
 
 因此，普通对话里提到“帮我看看论文格式”时，Claude **不会**自行启用本 skill，必须由用户显式输入斜杠命令。
 
+补充一点：`disable-model-invocation: true` 时该 skill 的 description 也不进入上下文，所以它在会话里完全不占上下文开销——代价是模型根本不知道它存在，只能靠你自己记得用 `/cn-paper-writing`。
+
 ### 如需改为自动触发
 
 修改 `SKILL.md` 顶部的 frontmatter，两步：
@@ -93,15 +95,22 @@ disable-model-invocation: true      # ← 删除这一整行
 description: 中国论文书写规范助手。依据 GB/T 7713.1-2025、GB/T 7713.2-2022、GB/T 7714-2025 等国家标准，指导中文论文撰写、参考文献著录与格式审查。当用户要求撰写、检查、审校或规范化中文学位论文、期刊论文、参考文献、摘要、标点与数字用法时使用。
 ```
 
-`description` 是模型判断是否调用的**唯一依据**，写得越具体（覆盖“学位论文”“参考文献”“摘要格式”“格式检查”等说法），越容易被正确触发。
+`description` 是模型判断是否调用的**唯一依据**，写得越具体（覆盖“学位论文”“参考文献”“摘要格式”“格式检查”等说法），越容易被正确触发。另外确认 frontmatter 里没有 `user-invocable: false`（本 skill 未设置该项，保持默认即可）。
 
 **第三步：重启会话**
 
-保存后退出（`/exit`）并重新启动 Claude Code，新会话才会读取改动。之后在对话中提出相关请求，Claude 会自动调用；`/cn-paper-writing` 手动调用方式依然可用。
+frontmatter 在会话启动时建立索引，所以改完必须让 Claude Code 重新扫描：
+
+- 常规做法：`/exit` 后重新启动，新会话读取改动；
+- Claude Code v2.1.152 及以上：可用 `/reload-skills` 重新扫描，不必丢掉当前对话。
+
+之后在对话中提出相关请求，Claude 会自动调用；`/cn-paper-writing` 手动调用方式依然可用。
 
 ### 如需恢复为仅手动调用
 
 把 `disable-model-invocation: true` 加回 frontmatter，并在 description 末尾补回“仅由用户通过 /cn-paper-writing 手动调用。”，同样需要重启会话生效。
+
+> 注：`disable-model-invocation` 属于 Claude Code 的扩展字段，不保证被其他支持 Agent Skills 标准的宿主（如 Codex 等）识别。换宿主使用时，需按该宿主的机制另行限制自动触发。
 
 ## 使用示例
 
